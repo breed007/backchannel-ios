@@ -6,9 +6,8 @@ kit) and `mikesimone/backchannel` → `apple/`.
 
 ## I0: build Signal-iOS unmodified (started 2026-11-07)
 
-Result so far: **builds and starts in the Simulator.** Not yet built for
-or run on a real iPhone, and not yet linked; that needs the iPhone
-connected and App IDs registered on the signing team (below).
+Result so far: **builds, installs and starts on a real iPhone beside
+official Signal.** Not yet linked.
 
 ### Machine and versions
 
@@ -64,7 +63,7 @@ xcodebuild -workspace Signal.xcworkspace -scheme Signal \
   upstream prefix) launches to Signal's welcome screen ("Continue",
   "Restore or Transfer Account") on an iPhone 17 Pro Simulator.
 
-### For the device build (next)
+### Build for an iPhone
 
 Debug builds use `Signal/Signal.entitlements`,
 `SignalNSE/SignalNSE.entitlements` and
@@ -80,9 +79,33 @@ prefix, the team needs:
 
 Per Signal's `BUILDING.md`, turn off Push Notifications, Apple Pay,
 Communication Notifications and Data Protection, and keep Background
-Modes and App Groups. Beyond those, the entitlements ask for
-carrier-constrained networking (Apple grants it on request) and Wi-Fi
-Aware; expect to turn those off too if provisioning refuses them.
+Modes and App Groups. The three Debug entitlements files now drop those,
+plus carrier-constrained networking and Wi-Fi Aware, which Apple grants
+only on request. Each file carries a `BACKCHANNEL:` comment. Associated
+Domains, iCloud key-value storage, Enhanced Security (`hardened-process`)
+and the keychain group stay, and provisioned without trouble.
+
+```sh
+xcodebuild -workspace Signal.xcworkspace -scheme Signal \
+  -configuration Debug -destination 'id=<iPhone UDID>' \
+  -allowProvisioningUpdates -allowProvisioningDeviceRegistration build \
+  DEVELOPMENT_TEAM=YA83Q8FTH3 SIGNAL_BUNDLEID_PREFIX=net.mikesimone.backchannel \
+  CODE_SIGN_STYLE=Automatic
+xcrun devicectl device install app --device <iPhone UDID> \
+  ~/Library/Developer/Xcode/DerivedData/<...>/Build/Products/Debug-iphoneos/Signal.app
+```
+
+The team and prefix are passed on the command line, so nothing about the
+signing team is committed (CLAUDE.md rule 10). Xcode, signed in to an
+Apple ID on the team, registered the App IDs and app groups itself and
+made "iOS Team Provisioning Profile" profiles for all three bundle IDs.
+The build is signed by team `YA83Q8FTH3`, `application-identifier`
+`YA83Q8FTH3.net.mikesimone.backchannel.signal`, app groups
+`group.net.mikesimone.backchannel.signal.group` and `.staging`.
+
+Installed on an iPhone 18 Pro Max (2026-11-07) next to official Signal
+8.35.1 from the App Store. Both show as "Signal" on the home screen until
+the I1 rebrand; they share no data.
 
 ### What CLAUDE.md got wrong
 
