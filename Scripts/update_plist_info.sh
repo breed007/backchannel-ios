@@ -9,7 +9,8 @@ if [ "${PROJECT_DIR}" = "" ]; then
 fi
 
 # Capture project hashes that we want to add to the Info.plist
-cd $PROJECT_DIR
+# BACKCHANNEL: quoted, so the build works from a path with a space in it.
+cd "$PROJECT_DIR"
 _git_commit_signal=`git log --pretty=oneline --decorate=no | head -1`
 
 # Remove existing .plist entry, if any.
